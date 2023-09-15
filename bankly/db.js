@@ -1,7 +1,7 @@
-/** Database setup for jobly. */
+/** Database setup for bankly. */
 
-const { Client } = require('pg');
-const { DB_URI } = require('./config');
+const { Client } = require("pg");
+const { DB_URI } = require("./config");
 
 const client = new Client(DB_URI);
 

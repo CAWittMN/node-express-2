@@ -1,14 +1,20 @@
-const bcrypt = require('bcrypt');
-const db = require('../db');
-const ExpressError = require('../helpers/expressError');
-const sqlForPartialUpdate = require('../helpers/partialUpdate');
+const bcrypt = require("bcrypt");
+const db = require("../db");
+const ExpressError = require("../helpers/expressError");
+const sqlForPartialUpdate = require("../helpers/partialUpdate");
 const { BCRYPT_WORK_FACTOR } = require("../config");
 
 class User {
+  /** Register user with data. Returns new user data. */
 
-/** Register user with data. Returns new user data. */
-
-  static async register({username, password, first_name, last_name, email, phone}) {
+  static async register({
+    username,
+    password,
+    first_name,
+    last_name,
+    email,
+    phone,
+  }) {
     const duplicateCheck = await db.query(
       `SELECT username 
         FROM users 
@@ -30,19 +36,11 @@ class User {
           (username, password, first_name, last_name, email, phone) 
         VALUES ($1, $2, $3, $4, $5, $6) 
         RETURNING username, password, first_name, last_name, email, phone`,
-      [
-        username,
-        hashedPassword,
-        first_name,
-        last_name,
-        email,
-        phone
-      ]
+      [username, hashedPassword, first_name, last_name, email, phone]
     );
 
     return result.rows[0];
   }
-
 
   /** Is this username + password combo correct?
    *
@@ -67,9 +65,10 @@ class User {
     const user = result.rows[0];
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      delete user.password;
       return user;
     } else {
-      throw new ExpressError('Cannot authenticate', 401);
+      throw new ExpressError("Cannot authenticate", 401);
     }
   }
 
@@ -113,7 +112,7 @@ class User {
     const user = result.rows[0];
 
     if (!user) {
-      new ExpressError('No such user', 404);
+      new ExpressError("No such user", 404);
     }
 
     return user;
@@ -129,9 +128,9 @@ class User {
 
   static async update(username, data) {
     let { query, values } = sqlForPartialUpdate(
-      'users',
+      "users",
       data,
-      'username',
+      "username",
       username
     );
 
@@ -139,7 +138,7 @@ class User {
     const user = result.rows[0];
 
     if (!user) {
-      throw new ExpressError('No such user', 404);
+      throw new ExpressError("No such user", 404);
     }
 
     return user;
@@ -153,13 +152,13 @@ class User {
 
   static async delete(username) {
     const result = await db.query(
-      'DELETE FROM users WHERE username = $1 RETURNING username',
+      "DELETE FROM users WHERE username = $1 RETURNING username",
       [username]
     );
     const user = result.rows[0];
 
     if (!user) {
-      throw new ExpressError('No such user', 404);
+      throw new ExpressError("No such user", 404);
     }
 
     return true;
@@ -167,3 +166,15 @@ class User {
 }
 
 module.exports = User;
+
+/** are there any bugs in this code?
+ *
+ * BUG #1:
+ *
+ * The code is missing a salt for the bcrypt hash.
+ *
+ * BUG #2:
+ *
+ * The code is missing a return statement for the user.
+ *
+ */
